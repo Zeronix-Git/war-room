@@ -1,10 +1,9 @@
-from os import stat
 import sqlite3
 from contextlib import closing
 from typing import Tuple
-from war_room.core.user import User
+from war_room.core.types import User
+from option import Option, Result
 from war_room.core.database.base import UserDatabase
-from war_room.utils.utils import mkdir_and_touch
 
 class SQLiteUserDatabase(UserDatabase):
     
@@ -13,51 +12,74 @@ class SQLiteUserDatabase(UserDatabase):
 
         with self._connection as cursor:
             cursor.execute("""CREATE TABLE IF NOT EXISTS users(
-                discord_id INT PRIMARY KEY,
+                id INT PRIMARY KEY,
                 game_count INT,
                 rating FLOAT);
             """)
 
     @staticmethod
     def _user_to_record(user: User) -> Tuple:
-        return (user.discord_id, user.game_count, user.rating)
+        return (user.id, user.game_count, user.rating)
 
     @staticmethod
     def _record_to_user(record: Tuple) -> User:
         return User(
-            discord_id = record[0],
+            id = record[0],
             game_count = record[1],
             rating = record[2]
         )
     
-    def contains_user(self, discord_id: int):
-        with closing(self._connection.cursor()) as cursor:
-            cursor.execute("SELECT * FROM users WHERE discord_id = ?", (discord_id,))
-            data = cursor.fetchone()
-            return data is not None
+    def get_user(self, id: int) -> Result[Option[User], str]:
+        try:
+            with closing(self._connection.cursor()) as cursor:
+                cursor.execute(
+                    "SELECT * FROM users WHERE id = :id", 
+                    {
+                        'id': id,
+                    }
+                )
+                record = cursor.fetchone()
+                if record is None:
+                    return Result.Ok(Option.NONE())
+                else:
+                    return Result.Ok(Option.Some(self._record_to_user(record)))
+        except sqlite3.Error as e:
+            return Result.Err(str(e))
 
-    def register_user(self, discord_id: int):
-        user = User(discord_id = discord_id)
-        with closing(self._connection.cursor()) as cursor:
-            cursor.execute(
-                "INSERT INTO users (discord_id, game_count, rating) VALUES (?,?,?)", 
-                (user.discord_id, user.game_count, user.rating)
-            )
-    
-    def get_user(self, discord_id: int):
-        with closing(self._connection.cursor()) as cursor:
-            cursor.execute("SELECT * FROM users WHERE discord_id = ?", (discord_id,))
-            record = cursor.fetchone()
-            return self._record_to_user(record)
+    def update_user(self, user: User) -> Result[None, str]:
+        return self.contains_user(user.id).map(
+            lambda contains_user: self._update_existing_user(user) if contains_user else self._add_new_user(user)
+        )
 
-    def update_user_information(self, user: User) -> None:
-        with closing(self._connection.cursor()) as cursor:
-            cursor.execute(
-                "UPDATE users SET discord_id = :discord_id, game_count = :game_count, rating = :rating WHERE discord_id = :discord_id", 
-                {
-                    'discord_id': user.discord_id,
-                    'game_count': user.game_count,
-                    'rating': user.rating
-                }
-            )
-    
+    def _add_new_user(self, user: User) -> Result[None, str]:
+        try:
+            with closing(self._connection.cursor()) as cursor:
+                cursor.execute(
+                    "INSERT INTO users (id, game_count, rating) VALUES (:id, :game_count, :rating);", 
+                    {
+                        'id': user.id,
+                        'game_count': user.game_count,
+                        'rating': user.rating
+                    }
+                )
+            return Result.Ok(None)
+
+        except sqlite3.Error as e:
+            return Result.Err(str(e))   
+
+    def _update_existing_user(self, user: User) -> Result[None, str]:      
+            try:
+                with closing(self._connection.cursor()) as cursor:
+                    cursor.execute(
+                        "UPDATE users SET id = :id, game_count = :game_count, rating = :rating WHERE id = :id", 
+                        {
+                            'id': user.id,
+                            'game_count': user.game_count,
+                            'rating': user.rating
+                        }
+                    )
+                    
+                    return Result.Ok(None)
+                    
+            except sqlite3.Error as e:
+                return Result.Err(str(e))

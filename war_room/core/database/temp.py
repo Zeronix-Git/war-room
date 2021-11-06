@@ -1,4 +1,5 @@
-from war_room.core.user import User
+from option import Option, Result
+from war_room.core.types import User
 from war_room.core.database.base import UserDatabase
 
 class TemporaryUserDatabase(UserDatabase):
@@ -6,14 +7,12 @@ class TemporaryUserDatabase(UserDatabase):
     def __init__(self):
         self.users = {}
 
-    def register_user(self, discord_id: int):
-        self.users[discord_id] = User(discord_id = discord_id)
+    def get_user(self, id: int) -> Result[Option[User], str]:
+        if id in self.users:
+            return Result.Ok(Option.Some(self.users[id]))
+        else:
+            return Result.Ok(Option.NONE())
 
-    def contains_user(self, discord_id: int) -> User:
-        return discord_id in self.users
-
-    def get_user(self, discord_id: int) -> User:
-        return self.users[discord_id]
-
-    def update_user_information(self, user: User) -> None:
-        self.users[user.discord_id] = user
+    def update_user(self, user: User) -> Result[None, str]:
+        self.users[user.id] = user
+        return Result.Ok(None)
