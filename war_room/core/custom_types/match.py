@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from war_room.core.types.interfaces import UniqueDataclassDictionaryLike
+from war_room.core.custom_types.interfaces import DataclassDictionaryLike, UniqueDictionaryLike
 
 
 class MatchStatus:
@@ -17,7 +17,7 @@ class MatchStatus:
 
 
 @dataclass
-class Match(UniqueDataclassDictionaryLike):
+class Match(UniqueDictionaryLike, DataclassDictionaryLike):
     id: int
     p1_user_id: int
     p2_user_id: int

@@ -40,5 +40,5 @@ class DataclassDictionaryLike(DataclassMixin, DictionaryLike):
         pass
 
 
-class UniqueDataclassDictionaryLike(Unique, DataclassDictionaryLike):
+class UniqueDictionaryLike(Unique, DictionaryLike):
     pass

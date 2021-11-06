@@ -1,4 +1,4 @@
-from war_room.core.types import User
+from war_room.core.custom_types import User
 
 
 def test_to_from_dict():

@@ -1,4 +1,4 @@
-from war_room.core.types import Match, MatchStatus
+from war_room.core.custom_types import Match, MatchStatus
 
 
 def test_to_from_dict():

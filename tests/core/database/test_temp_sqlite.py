@@ -1,7 +1,7 @@
 import pytest
 
+from war_room.core.custom_types import User
 from war_room.core.database import SQLUserDatabase, TemporaryUserDatabase
-from war_room.core.types import User
 
 user_database_factories = {'temp': lambda: TemporaryUserDatabase(), 'sqlite': lambda: SQLUserDatabase(':memory:')}
 
