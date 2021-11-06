@@ -7,7 +7,7 @@ from sqlalchemy.sql import select
 
 from war_room.core.custom_types import Match, User
 from war_room.core.custom_types.interfaces import UniqueDictionaryLike
-from war_room.core.database.base import UniqueDictionaryLikeDatabase
+from war_room.core.database.base import MatchDatabase, UniqueDictionaryLikeDatabase, UserDatabase
 
 
 def _get_table_columns_from_schema(schema: Dict[str, Any]):
@@ -74,7 +74,7 @@ class SQLUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase[UniqueDiction
             return Result.Err(str(e))
 
 
-class SQLUserDatabase(SQLUniqueDictionaryLikeDatabase):
+class SQLUserDatabase(SQLUniqueDictionaryLikeDatabase, UserDatabase):
     def __init__(self, database_path):
         return super(SQLUserDatabase, self).__init__(
             database_path=database_path,
@@ -84,7 +84,7 @@ class SQLUserDatabase(SQLUniqueDictionaryLikeDatabase):
         )
 
 
-class SQLMatchDatabase(SQLUniqueDictionaryLikeDatabase):
+class SQLMatchDatabase(SQLUniqueDictionaryLikeDatabase, MatchDatabase):
     def __init__(self, database_path):
         return super(SQLUserDatabase, self).__init__(
             database_path=database_path,

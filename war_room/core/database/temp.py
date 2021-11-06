@@ -1,7 +1,7 @@
 from option import Option, Result
 
 from war_room.core.custom_types.interfaces import UniqueDictionaryLike
-from war_room.core.database.base import UniqueDictionaryLikeDatabase
+from war_room.core.database.base import MatchDatabase, UniqueDictionaryLikeDatabase, UserDatabase
 
 
 class TemporaryUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase[UniqueDictionaryLike]):
@@ -19,9 +19,9 @@ class TemporaryUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase[UniqueD
         return Result.Ok(None)
 
 
-class TemporaryUserDatabase(TemporaryUniqueDictionaryLikeDatabase):
+class TemporaryUserDatabase(TemporaryUniqueDictionaryLikeDatabase, UserDatabase):
     pass
 
 
-class TemporaryMatchDatabase(TemporaryUniqueDictionaryLikeDatabase):
+class TemporaryMatchDatabase(TemporaryUniqueDictionaryLikeDatabase, MatchDatabase):
     pass

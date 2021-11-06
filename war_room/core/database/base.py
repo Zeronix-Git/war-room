@@ -3,6 +3,8 @@ from typing import Generic, TypeVar
 
 from option import Option, Result
 
+from war_room.core.custom_types import Match, User
+
 UniqueDictionaryLike = TypeVar('UniqueDictionaryLike')
 
 
@@ -30,3 +32,11 @@ class UniqueDictionaryLikeDatabase(ABC, Generic[UniqueDictionaryLike]):
         If the object already exists, this should update that object's information
         without creating a duplicate."""
         pass
+
+
+class UserDatabase(UniqueDictionaryLikeDatabase[User]):
+    pass
+
+
+class MatchDatabase(UniqueDictionaryLikeDatabase[Match]):
+    pass
