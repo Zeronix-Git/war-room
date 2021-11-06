@@ -26,12 +26,18 @@ class UserDatabase(ABC):
 class MatchDatabase(ABC):
 
     @abstractmethod
-    def get_match(self, match_id: int) -> Option[Match]:
+    def get_match(self, match_id: int) -> Result[Option[Match], str]:
+        """ Get a match by its unique ID. """
         pass
 
-    def contains_match(self, match_id: int) -> bool:
+    def contains_match(self, match_id: int) -> Result[bool, str]:
         return self.get_match(match_id).is_some()
 
     @abstractmethod
-    def update_match(self, match: Match) -> Result:
+    def update_match(self, match: Match) -> Result[None, str]:
+        """ Update match data in the database. 
+        
+        If the match does not already exist, this function should create a new match.
+        If the match already exists, this function should update that match's information
+        without creating a duplicate. """
         pass    

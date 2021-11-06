@@ -14,8 +14,8 @@ class MatchStatus:
 
 @dataclass
 class Match:
-    p1_user_id: int 
+    id: int
+    p1_user_id: int
     p2_user_id: int
-    game_id: int
     tier: int
     status: MatchStatus = MatchStatus.NOT_STARTED
