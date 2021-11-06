@@ -1,24 +1,28 @@
 from dataclasses import dataclass
-from typing import Dict, Any
-from war_room.core.types.interfaces import DataclassDictionaryLike, Unique
+from typing import Any, Dict
+
+from war_room.core.types.interfaces import UniqueDataclassDictionaryLike
+
 
 class MatchStatus:
-    """ Utility class for handling match statuses """
+    """Utility class for handling match statuses"""
+
     NOT_STARTED = 'not_started'
     ONGOING = 'ongoing'
     COMPLETED = 'completed'
-    
+
     @staticmethod
     def is_valid(status: str) -> bool:
         return status in (MatchStatus.NOT_STARTED, MatchStatus.ONGOING, MatchStatus.COMPLETED)
 
+
 @dataclass
-class Match(Unique, DataclassDictionaryLike):
+class Match(UniqueDataclassDictionaryLike):
     id: int
     p1_user_id: int
     p2_user_id: int
     tier: int
-    status: MatchStatus = MatchStatus.NOT_STARTED
+    status: str = MatchStatus.NOT_STARTED
 
     @property
     def uid(self):

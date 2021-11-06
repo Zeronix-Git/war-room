@@ -1,2 +1,2 @@
-from .temp import TemporaryUserDatabase, TemporaryMatchDatabase
-from .sql import SQLUserDatabase, SQLMatchDatabase
+from .sql import SQLMatchDatabase, SQLUserDatabase
+from .temp import TemporaryMatchDatabase, TemporaryUserDatabase

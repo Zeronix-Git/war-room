@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Dict, Any
-from war_room.core.types.interfaces import DataclassDictionaryLike, Unique
+from typing import Any, Dict
+
+from war_room.core.types.interfaces import UniqueDataclassDictionaryLike
+
 
 @dataclass
-class User(Unique, DataclassDictionaryLike):
-    id: int 
+class User(UniqueDataclassDictionaryLike):
+    id: int
     game_count: int = 0
     rating: float = 800.0
 
