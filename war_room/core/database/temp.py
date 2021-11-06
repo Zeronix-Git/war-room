@@ -1,33 +1,25 @@
 from option import Option, Result
+from typing import Generic
 from war_room.core.types import User, Match
-from war_room.core.database.base import MatchDatabase, UserDatabase
+from war_room.core.database.base import UniqueDictionaryLikeDatabase, UniqueDictionaryLike
 
-class TemporaryUserDatabase(UserDatabase):
+class TemporaryUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase, Generic[UniqueDictionaryLike]):
     
     def __init__(self):
-        self.users = {}
+        self.items = {}
 
-    def get_user(self, id: int) -> Result[Option[User], str]:
-        if id in self.users:
-            return Result.Ok(Option.Some(self.users[id]))
+    def get(self, uid: int) -> Result[Option[UniqueDictionaryLike], str]:
+        if uid in self.items:
+            return Result.Ok(Option.Some(self.items[uid]))
         else:
             return Result.Ok(Option.NONE())
 
-    def update_user(self, user: User) -> Result[None, str]:
-        self.users[user.id] = user
+    def update(self, udl: UniqueDictionaryLike) -> Result[None, str]:
+        self.items[udl.uid] = udl
         return Result.Ok(None)
 
-class TemporaryMatchDatabase(MatchDatabase):
-    
-    def __init__(self):
-        self.matches = {}
+class TemporaryUserDatabase(TemporaryUniqueDictionaryLikeDatabase[User]):
+    pass
 
-    def get_match(self, id: int) -> Result[Option[Match], str]:
-        if id in self.matches:
-            return Result.Ok(Option.Some(self.matches[id]))
-        else:
-            return Result.Ok(Option.NONE())
-
-    def update_match(self, match: Match) -> Result[None, str]:
-        self.users[match.id] = match
-        return Result.Ok(None)
+class TemporaryMatchDatabase(TemporaryUniqueDictionaryLikeDatabase[Match]):
+    pass

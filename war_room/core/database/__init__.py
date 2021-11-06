@@ -1,2 +1,2 @@
-from .temp import TemporaryUserDatabase
-from .sqlite import SQLiteUserDatabase
+from .temp import TemporaryUserDatabase, TemporaryMatchDatabase
+from .sqlite import SQLUserDatabase

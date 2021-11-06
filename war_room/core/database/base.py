@@ -1,43 +1,33 @@
 from abc import ABC, abstractmethod
 from option import Option, Result
-from war_room.core.types import User, Match
+from typing import TypeVar, Generic
+from war_room.core.types import User, Match, DictionaryLike, Unique
 
-class UserDatabase(ABC):
+UniqueDictionaryLike = TypeVar('UniqueDictionaryLike')
+
+class UniqueDictionaryLikeDatabase(ABC, Generic[UniqueDictionaryLike]):
+    """ A database that handles generic objects. 
+    
+    Objects must implement the interfaces:
+    - war_room.core.types.unique.Unique
+    - war_room.core.types.dict_like.DictionaryLike
+    """
 
     @abstractmethod
-    def get_user(self, id: int) -> Result[Option[User], str]:
-        """ Get a user by their unique ID. """
+    def get(self, uid: int) -> Result[Option[UniqueDictionaryLike], str]:
+        """ Get an object by its unique ID. """
         pass
 
-    def contains_user(self, id: int) -> Result[bool, str]:
-        return self.get_user(id).map(
-            lambda maybe_user: maybe_user.is_some
+    def contains(self, uid: int) -> Result[bool, str]:
+        return self.get(uid).map(
+            lambda maybe_object: maybe_object.is_some
         )
 
     @abstractmethod
-    def update_user(self, user: User) -> Result[None, str]:
-        """ Update a user's data in the database. 
+    def update(self, udl: UniqueDictionaryLike) -> Result[None, str]:
+        """ Update an object's data in the database. 
         
-        If the user does not already exist, this function should create a new user.
-        If the user already exists, this function should update that user's information
+        If the object does not already exist, this should create a new object in the DB.
+        If the object already exists, this should update that object's information
         without creating a duplicate. """
         pass
-
-class MatchDatabase(ABC):
-
-    @abstractmethod
-    def get_match(self, match_id: int) -> Result[Option[Match], str]:
-        """ Get a match by its unique ID. """
-        pass
-
-    def contains_match(self, match_id: int) -> Result[bool, str]:
-        return self.get_match(match_id).is_some()
-
-    @abstractmethod
-    def update_match(self, match: Match) -> Result[None, str]:
-        """ Update match data in the database. 
-        
-        If the match does not already exist, this function should create a new match.
-        If the match already exists, this function should update that match's information
-        without creating a duplicate. """
-        pass    

@@ -1,85 +1,107 @@
-import sqlite3
-from contextlib import closing
-from typing import Tuple
-from war_room.core.types import User
+import sqlalchemy
+from sqlalchemy.sql import select
+
+from typing import Tuple, Dict, Any, Generic, List
+from war_room.core import database
+from war_room.core.types import User, Match
 from option import Option, Result
-from war_room.core.database.base import UserDatabase
+from war_room.core.database.base import UniqueDictionaryLike, UniqueDictionaryLikeDatabase
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, Float, String
 
-class SQLiteUserDatabase(UserDatabase):
+
+def _get_table_columns_from_schema(schema: Dict[str, Any]):
+    return [
+        Column(key, value) for key, value in schema.items()
+    ]
+
+class SQLUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase, Generic[UniqueDictionaryLike]):
     
-    def __init__(self, database_path: str):
-        self._connection = sqlite3.connect(database_path)
+    def __init__(self, name: str, schema: Dict[str, Any], database_path: str, object_class: Any):
+        self.engine = create_engine(f'sqlite:///{database_path}')
+        self.meta = MetaData()
+        self.schema = schema
 
-        with self._connection as cursor:
-            cursor.execute("""CREATE TABLE IF NOT EXISTS users(
-                id INT PRIMARY KEY,
-                game_count INT,
-                rating FLOAT);
-            """)
-
-    @staticmethod
-    def _user_to_record(user: User) -> Tuple:
-        return (user.id, user.game_count, user.rating)
-
-    @staticmethod
-    def _record_to_user(record: Tuple) -> User:
-        return User(
-            id = record[0],
-            game_count = record[1],
-            rating = record[2]
+        self.table = Table(
+            name, self.meta,
+            Column('uid', Integer, primary_key=True),
+            *_get_table_columns_from_schema(schema)
         )
-    
-    def get_user(self, id: int) -> Result[Option[User], str]:
+        self._object_class = object_class
+        self.meta.create_all(self.engine)
+
+    @property 
+    def _object_columns(self) -> List[Column]:
+        return [col for col in self.table.columns if col.key != 'uid']
+
+    def get(self, uid: int) -> Result[Option[UniqueDictionaryLike], str]:
         try:
-            with closing(self._connection.cursor()) as cursor:
-                cursor.execute(
-                    "SELECT * FROM users WHERE id = :id", 
-                    {
-                        'id': id,
-                    }
-                )
-                record = cursor.fetchone()
+            with self.engine.connect() as connection:
+                command = select(self._object_columns).where(self.table.c.uid == uid)
+                result = connection.execute(command)
+                record = result.fetchone()
+
                 if record is None:
                     return Result.Ok(Option.NONE())
                 else:
-                    return Result.Ok(Option.Some(self._record_to_user(record)))
-        except sqlite3.Error as e:
+                    dict = {key: value for key, value in zip(self.schema.keys(), record)}
+                    udl = self._object_class.from_dict(dict)
+                    return Result.Ok(Option.Some(udl))
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
             return Result.Err(str(e))
 
-    def update_user(self, user: User) -> Result[None, str]:
-        return self.contains_user(user.id).map(
-            lambda contains_user: self._update_existing_user(user) if contains_user else self._add_new_user(user)
+    def update(self, udl: UniqueDictionaryLike) -> Result[None, str]:
+        return self.contains(udl.uid).map(
+            lambda contains: self._update_existing(udl) if contains else self._add_new(udl)
         )
 
-    def _add_new_user(self, user: User) -> Result[None, str]:
+    def _add_new(self, udl: UniqueDictionaryLike) -> Result[None, str]:
         try:
-            with closing(self._connection.cursor()) as cursor:
-                cursor.execute(
-                    "INSERT INTO users (id, game_count, rating) VALUES (:id, :game_count, :rating);", 
-                    {
-                        'id': user.id,
-                        'game_count': user.game_count,
-                        'rating': user.rating
-                    }
-                )
+            with self.engine.connect() as connection:
+                command = self.table.insert().values(uid = udl.uid, **udl.to_dict())
+                connection.execute(command)
             return Result.Ok(None)
 
-        except sqlite3.Error as e:
+        except sqlalchemy.exc.SQLAlchemyError as e:
             return Result.Err(str(e))   
 
-    def _update_existing_user(self, user: User) -> Result[None, str]:      
-            try:
-                with closing(self._connection.cursor()) as cursor:
-                    cursor.execute(
-                        "UPDATE users SET id = :id, game_count = :game_count, rating = :rating WHERE id = :id", 
-                        {
-                            'id': user.id,
-                            'game_count': user.game_count,
-                            'rating': user.rating
-                        }
-                    )
-                    
-                    return Result.Ok(None)
-                    
-            except sqlite3.Error as e:
-                return Result.Err(str(e))
+    def _update_existing(self, udl: UniqueDictionaryLike) -> Result[None, str]:      
+        try:
+            with self.engine.connect() as connection:
+                command = self.table.update() \
+                    .where(self.table.c.uid == udl.uid) \
+                    .values(uid = udl.uid, **udl.to_dict())
+                connection.execute(command)
+
+            return Result.Ok(None)
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            return Result.Err(str(e))
+
+class SQLUserDatabase(SQLUniqueDictionaryLikeDatabase[User]):
+    def __init__(self, database_path):
+        return super(SQLUserDatabase, self).__init__(
+            database_path = database_path,
+            name = 'users',
+            schema = {
+                'id': Integer, 
+                'game_count': Integer, 
+                'rating': Float
+            },
+            object_class = User,
+        )
+
+class SQLMatchDatabase(SQLUniqueDictionaryLikeDatabase[Match]):
+    def __init__(self, database_path):
+        return super(SQLUserDatabase, self).__init__(
+            database_path = database_path,
+            name = 'matches',
+            schema = {
+                'id': Integer,
+                'p1_user_id': Integer, 
+                'p2_user_id': Integer, 
+                'tier': Integer,
+                'status': String,
+            },
+            object_class = Match,
+        )
