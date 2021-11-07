@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterator, List
 
 import sqlalchemy
 from option import Option, Result
@@ -46,6 +46,20 @@ class SQLUniqueDictionaryLikeDatabase(UniqueDictionaryLikeDatabase[UniqueDiction
 
         except sqlalchemy.exc.SQLAlchemyError as e:
             return Result.Err(str(e))
+
+    def __iter__(self) -> Iterator[Result[UniqueDictionaryLike, str]]:
+        try:
+            with self.engine.connect() as connection:
+                command = select(self._object_columns)
+                result = connection.execute(command)
+                records = result.fetchall()
+
+                for record in records:
+                    dict = {key: value for key, value in zip(self.schema.keys(), record)}
+                    yield Result.Ok(self._object_class.from_dict(dict))
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            yield Result.Err(str(e))
 
     def update(self, udl: UniqueDictionaryLike) -> Result[None, str]:
         return self.contains(udl.uid).map(

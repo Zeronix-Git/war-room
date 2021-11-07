@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, Iterator, TypeVar
 
 from option import Option, Result
 
@@ -23,6 +23,10 @@ class UniqueDictionaryLikeDatabase(ABC, Generic[UniqueDictionaryLike]):
 
     def contains(self, uid: int) -> Result[bool, str]:
         return self.get(uid).map(lambda maybe_object: maybe_object.is_some)
+
+    @abstractmethod
+    def __iter__(self) -> Iterator[Result[UniqueDictionaryLike, str]]:
+        pass
 
     @abstractmethod
     def update(self, udl: UniqueDictionaryLike) -> Result[None, str]:
