@@ -9,19 +9,35 @@ class MatchStatus:
 
     NOT_STARTED = 'not_started'
     ONGOING = 'ongoing'
-    COMPLETED = 'completed'
+    P1_WIN = 'p1_win'
+    P2_WIN = 'p2_win'
+    DRAW = 'draw'
 
     @staticmethod
     def is_valid(status: str) -> bool:
-        return status in (MatchStatus.NOT_STARTED, MatchStatus.ONGOING, MatchStatus.COMPLETED)
+        return status in (
+            MatchStatus.NOT_STARTED,
+            MatchStatus.ONGOING,
+            MatchStatus.P1_WIN,
+            MatchStatus.P2_WIN,
+            MatchStatus.DRAW,
+        )
+
+    @staticmethod
+    def is_completed(status: str) -> bool:
+        return status in (MatchStatus.P1_WIN, MatchStatus.P2_WIN, MatchStatus.DRAW)
 
 
 @dataclass
 class Match(UniqueDictionaryLike, DataclassDictionaryLike):
     id: int
     p1_user_id: int
+    p1_commander: str
     p2_user_id: int
-    tier: int
+    p2_commander: str
+    map_id: int
+    pref_id: int
+    game_url: str
     status: str = MatchStatus.NOT_STARTED
 
     @property
