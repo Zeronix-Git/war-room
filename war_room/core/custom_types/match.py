@@ -29,6 +29,14 @@ class MatchStatus:
 
 
 @dataclass
+class MatchDescription:
+    p1_user_id: int
+    p2_user_id: int
+    map_id: int
+    pref_id: int
+
+
+@dataclass
 class Match(UniqueDictionaryLike, DataclassDictionaryLike):
     id: int
     p1_user_id: int
