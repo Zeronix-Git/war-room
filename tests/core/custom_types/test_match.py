@@ -1,4 +1,4 @@
-from war_room.core.custom_types import Match, MatchStatus
+from war_room.core.custom_types.match import Match, MatchStatus, Tier
 
 
 def test_to_from_dict():
@@ -9,6 +9,7 @@ def test_to_from_dict():
         p2_user_id=0,
         p2_commander='',
         map_id=0,
+        tier=Tier.T1,
         pref_id=0,
         game_url='',
         status=MatchStatus.NOT_STARTED,
