@@ -43,4 +43,6 @@ class UserDatabase(UniqueDictionaryLikeDatabase[User]):
 
 
 class MatchDatabase(UniqueDictionaryLikeDatabase[Match]):
-    pass
+    @abstractmethod
+    def get_user_active_game_count(self, user_id: int) -> Result[int, str]:
+        pass

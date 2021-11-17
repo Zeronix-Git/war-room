@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterator, List
 import sqlalchemy
 from option import Option, Result
 from sqlalchemy import Column, Float, Integer, MetaData, String, Table, create_engine
-from sqlalchemy.sql import select
+from sqlalchemy.sql import func, or_, select
 
 from war_room.core.custom_types import Match, User
 from war_room.core.custom_types.interfaces import UniqueDictionaryLike
@@ -112,3 +112,16 @@ class SQLMatchDatabase(SQLUniqueDictionaryLikeDatabase, MatchDatabase):
             },
             object_class=Match,
         )
+
+    def get_user_active_game_count(self, user_id: int) -> Result[int, str]:
+        try:
+            with self.engine.connect() as connection:
+                command = self.table.select([func.count()]).where(
+                    or_(self.table.c.p1_user_id == user_id, self.table.c.p2_user_id == user_id)
+                )
+                result = connection.execute(command)
+
+            return Result.Ok(result.scalar())
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            return Result.Err(str(e))

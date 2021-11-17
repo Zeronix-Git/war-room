@@ -30,4 +30,9 @@ class TemporaryUserDatabase(TemporaryUniqueDictionaryLikeDatabase, UserDatabase)
 
 
 class TemporaryMatchDatabase(TemporaryUniqueDictionaryLikeDatabase, MatchDatabase):
-    pass
+    def get_user_active_game_count(self, user_id: int) -> Result[int, str]:
+        game_count = 0
+        for match in self.items.values():
+            if match.p1_user_id == user_id or match.p2_user_id == user_id:
+                game_count += 1
+        return Result.Ok(game_count)

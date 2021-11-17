@@ -47,6 +47,7 @@ bump2version = {version = "^1.0.1", optional = true}
 SQLAlchemy = "^1.4.26"
 option = "^1.0.3"
 "discord.py" = "^1.7.3"
+types-requests = "^2.26.0"
 
 [tool.poetry.extras]
 test = [

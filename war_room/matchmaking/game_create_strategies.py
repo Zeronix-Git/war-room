@@ -2,6 +2,8 @@ import random
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
+from war_room.core.custom_types.match import Tier
+
 
 class BaseGameCreationStrategy(ABC):
     @abstractmethod
@@ -9,7 +11,7 @@ class BaseGameCreationStrategy(ABC):
         pass
 
     @abstractmethod
-    def select_pref(self, pref_ids: List[int]) -> int:
+    def select_tier(self, tiers: List[Tier]) -> Tier:
         pass
 
     @abstractmethod
@@ -21,8 +23,8 @@ class RandomStrategy(BaseGameCreationStrategy):
     def select_map(self, map_ids: List[int]) -> int:
         return random.choice(map_ids)
 
-    def select_pref(self, pref_ids: List[int]) -> int:
-        return random.choice(pref_ids)
+    def select_tier(self, tiers: List[Tier]) -> Tier:
+        return random.choice(tiers)
 
     def select_player_order(self, user_ids: Tuple[int, int]) -> Tuple[int, int]:
         return user_ids if random.choice([True, False]) else (user_ids[1], user_ids[0])
