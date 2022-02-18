@@ -48,6 +48,7 @@ SQLAlchemy = "^1.4.26"
 option = "^1.0.3"
 "discord.py" = "^1.7.3"
 types-requests = "^2.26.0"
+python-dotenv = "^0.19.2"
 
 [tool.poetry.extras]
 test = [
